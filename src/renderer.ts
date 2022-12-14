@@ -1,4 +1,4 @@
-import { IRenderMime, IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { /* IRenderMime, */ IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { CompletionHandler, Completer } from '@jupyterlab/completer';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 
@@ -6,14 +6,14 @@ export class BBCompletionRenderer
   extends Completer.Renderer
   implements Completer.IRenderer
 {
-  private app: JupyterFrontEnd;
-  private renderMimeRegistry: IRenderMimeRegistry;
+  //private app: JupyterFrontEnd;
+  //private renderMimeRegistry: IRenderMimeRegistry;
   private namespaces: Map<string, string>;
 
   constructor(app: JupyterFrontEnd, renderMimeRegistry: IRenderMimeRegistry) {
     super();
-    this.app = app;
-    this.renderMimeRegistry = renderMimeRegistry;
+    //this.app = app;
+    //this.renderMimeRegistry = renderMimeRegistry;
     this.namespaces = new Map<string, string>();
   }
   // constructor() {

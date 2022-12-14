@@ -11,6 +11,9 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import { ILSPDocumentConnectionManager } from '@jupyterlab/lsp';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
+import { PromiseDelegate } from '@lumino/coreutils';
+
 import { BBCompletionRenderer } from './renderer';
 // import { Widget } from '@lumino/widgets';
 
@@ -84,41 +87,46 @@ export class LspCompletionProvider implements ICompletionProvider {
       console.debug('No active editor');
       return { start: 0, end: 0, items: [] };
     }
+
+    const promise = new PromiseDelegate<CompletionHandler.ICompletionItemsReply<CompletionHandler.ICompletionItem>>();
+
     console.log('Got editor' + editor);
     const selection = editor.getSelection();
+    const cursor = editor.getCursorPosition();
+    const offset = editor.getOffsetAt(cursor);
+    const token = editor.getTokenAtCursor();
+    console.debug("[LspCompletionProvider.fetch] selection:", selection);
+    console.debug("[LspCompletionProvider.fetch] cursor:", cursor);
+    console.debug("[LspCompletionProvider.fetch] offset:", offset);
+    console.debug("[LspCompletionProvider.fetch] token:", token);
+    console.debug("[LspCompletionProvider.fetch] request:", request);
+    
     lspConnection.clientRequests['textDocument/completion']
       .request({
         position: {
-          character: selection.start.column,
-          line: selection.start.line
+          character: cursor.column,
+          line: cursor.line
         },
         textDocument: { uri: adapter.virtualDocument.uri }
       })
       .then(async resp => {
         console.debug('resp', resp);
-        const items = [] as CompletionHandler.ICompletionItem[];
+        const items = [];
         items.push(...(resp as any).items);
-        const response = {
-          start: selection.start.column - selection.end.column,
-          end: selection.end.column,
-          items: items,
-          source: {
-            name: 'LSP',
-            priority: 2
-          }
-        };
 
-        return response;
+        promise.resolve({
+          start: offset,
+          end: offset,
+          items
+        });
       })
       .catch(e => {
         console.debug(e);
+        promise.reject(e);
       });
 
-    const promise: Promise<CompletionHandler.ICompletionItemsReply | any> =
-      new Promise(() => 'done');
-
     console.log('In fetch' + this._manager);
-    return promise;
+    return promise.promise;
   }
 
   identifier = 'CompletionProvider:lsp';
